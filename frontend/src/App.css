@@ -202,3 +202,222 @@ body { background-color: var(--bg-main); height: 100vh; display: flex; flex-dire
 
 .admin-link { display: block; text-align: center; margin-top: 25px; color: var(--text-light); font-size: 0.8rem; text-decoration: none; }
 .admin-link:hover { text-decoration: underline; color: var(--accent-color); }
+
+
+/* =========================================
+   DASHBOARD LAYOUT
+   ========================================= */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  padding-top: 80px; /* Space for the Fixed Header */
+}
+
+/* =========================================
+   UPDATED SIDEBAR (Light & Clean)
+   ========================================= */
+.sidebar {
+  width: 260px;
+  background-color: #ffffff; /* Changed from Dark Navy to White */
+  border-right: 1px solid var(--border-color);
+  position: fixed;
+  top: 80px;
+  bottom: 0;
+  left: 0;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+}
+
+.menu-item {
+  padding: 16px 25px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary); /* Dark Gray Text */
+  display: flex;
+  align-items: center; /* Aligns icon and text */
+  gap: 12px; /* Space between icon and text */
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+}
+
+.menu-item:hover {
+  background-color: #f1f5f9;
+  color: var(--primary-color);
+}
+
+.menu-item.active {
+  background-color: #eff6ff; /* Very light blue bg */
+  border-left-color: var(--accent-color);
+  color: var(--accent-color); /* Blue Text */
+  font-weight: 600;
+}
+
+.logout-btn {
+  /* ... keep existing styles, but update flex ... */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  margin-bottom: 20px;
+  background: none;
+  border: none;
+  color: #ef4444;
+  padding: 18px 25px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+.logout-btn:hover { background-color: #fef2f2; }
+
+
+/* =========================================
+   INPUT FIELDS WITH ICONS
+   ========================================= */
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Icon on the Left (Mail/Lock) */
+.input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+/* Eye Icon on the Right */
+.password-toggle-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+}
+
+.password-toggle-icon:hover { color: var(--accent-color); }
+
+/* Add padding to input so text doesn't overlap icons */
+.form-input-with-icon {
+  padding-left: 45px; /* Space for left icon */
+  padding-right: 45px; /* Space for right icon */
+}
+
+/* --- MAIN CONTENT (Right) --- */
+.main-content {
+  margin-left: 260px; /* Same width as sidebar */
+  padding: 40px;
+  width: 100%;
+  background-color: var(--bg-main);
+}
+
+.content-header h2 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  margin-bottom: 20px;
+}
+
+/* Profile Tables */
+.info-table { width: 100%; border-collapse: collapse; }
+.info-table td { padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+.info-label { font-weight: 600; color: var(--text-secondary); width: 150px; }
+.info-value { color: var(--text-main); font-weight: 500; }
+
+
+
+
+
+
+
+/* =========================================
+   MOBILE RESPONSIVENESS (Max-Width: 768px)
+   ========================================= */
+
+/* Default State: Hamburger is hidden on Laptop */
+.hamburger-btn {
+  display: none; 
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: var(--primary-color);
+  margin-right: 15px; /* Space between icon and logo */
+}
+
+.mobile-close-btn {
+  display: none; /* Hidden on Desktop */
+}
+
+.overlay {
+  display: none; /* Hidden on Desktop */
+}
+
+/* --- MOBILE VIEW RULES --- */
+@media (max-width: 768px) {
+  
+  /* 1. Show the Hamburger in Header */
+  .hamburger-btn {
+    display: block;
+  }
+
+  /* 2. Hide Sidebar by default (Push it off-screen) */
+  .sidebar {
+    transform: translateX(-100%); /* Move left off-screen */
+    width: 280px; /* Slightly wider for touch targets */
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease-in-out; /* Smooth Slide Animation */
+  }
+
+  /* 3. Show Sidebar when 'open' class is added */
+  .sidebar.open {
+    transform: translateX(0); /* Slide back in */
+  }
+
+  /* 4. Main Content takes full width */
+  .main-content {
+    margin-left: 0;
+    padding: 20px; /* Less padding on mobile */
+  }
+
+  /* 5. Mobile Close Button (X) inside sidebar */
+  .mobile-close-btn {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  /* 6. Dark Overlay background when menu is open */
+  .overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+    z-index: 40; /* Behind sidebar (50), On top of content */
+  }
+  
+  /* Adjust Header Text size for mobile */
+  .header-text h1 { font-size: 1.1rem; }
+  .header-text p { font-size: 0.75rem; }
+  .app-header { padding: 15px 20px; } /* Smaller padding */
+}
