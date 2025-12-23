@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './App.css'; 
+import './App.css';
 import logo from './logo.png'; 
 
-function Login() {
-  const [role, setRole] = useState('student');
-  const [email, setEmail] = useState('');
+function AdminLogin() {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [status, setStatus] = useState(null); 
+  const [status, setStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -19,19 +18,18 @@ function Login() {
 
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/login/', {
-        username: email, 
+        username: username,
         password: password
       });
 
       if (response.data.message === 'Login Successful') {
-        setStatus({ type: 'success', text: 'Credentials Verified. Redirecting...' });
-        
+        setStatus({ type: 'success', text: 'Admin Verified. Accessing Portal...' });
         setTimeout(() => {
-            role === 'authority' ? navigate('/authority-dashboard') : navigate('/student-dashboard');
+            navigate('/admin-dashboard');
         }, 800);
       }
     } catch (error) {
-      setStatus({ type: 'error', text: 'We could not verify your credentials.' });
+      setStatus({ type: 'error', text: 'Access Denied: Invalid Admin Credentials' });
       setIsLoading(false);
     }
   };
@@ -42,47 +40,26 @@ function Login() {
         <img src={logo} alt="RGUKT Logo" className="header-logo" />
         <div className="header-text">
           <h1>Smart Grievance Management System</h1>
-          <p>RGUKT NUZVID</p>
+          <p>ADMINISTRATION PORTAL</p>
         </div>
       </header>
 
       <div className="login-container">
         <div className="login-card">
           
-          {/* Dynamic Welcome Text based on Role */}
-          <div className="welcome-text">
-            <h2>
-              {role === 'student' ? 'You are a Student!' : 'You are an Authority!'}
-            </h2>
-            <p>Please enter your details to login.</p>
-          </div>
-
-          {/* Slider for Role */}
-          <div className="role-toggle-container">
-            <div className={`slider ${role === 'authority' ? 'right' : ''}`}></div>
-            <div 
-                className={`toggle-option ${role === 'student' ? 'active' : ''}`}
-                onClick={() => setRole('student')}
-            >
-                Student Login
-            </div>
-            <div 
-                className={`toggle-option ${role === 'authority' ? 'active' : ''}`}
-                onClick={() => setRole('authority')}
-            >
-                Authority Login
-            </div>
+          <div style={{marginBottom: "20px", textAlign: "center"}}>
+             <h3 style={{color: "#334155"}}>Admin Authentication</h3>
           </div>
 
           <form onSubmit={handleLogin}>
             <div className="form-group">
-              <label className="form-label">College Email ID</label>
+              <label className="form-label">Admin Username</label>
               <input
                 className="form-input"
                 type="text"
-                placeholder="id@rguktn.ac.in"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter Admin ID"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 disabled={isLoading}
               />
@@ -111,11 +88,10 @@ function Login() {
               {status.text}
             </div>
           )}
-          
         </div>
       </div>
     </>
   );
 }
 
-export default Login;
+export default AdminLogin;
