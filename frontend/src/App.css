@@ -341,7 +341,217 @@ body { background-color: var(--bg-main); height: 100vh; display: flex; flex-dire
 .info-value { color: var(--text-main); font-weight: 500; }
 
 
+/* =========================================
+   GRIEVANCE TABS & FORM
+   ========================================= */
 
+/* 1. The Tab Container (Scrollable on mobile) */
+.tabs-container {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 15px; /* Space for the arrow */
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 30px;
+  margin-top: 20px;
+  scrollbar-width: none; /* Hide scrollbar for cleaner look */
+}
+.tabs-container::-webkit-scrollbar { display: none; }
+
+/* 2. Individual Tab Pills */
+.tab-btn {
+  padding: 10px 20px;
+  border-radius: 30px;
+  background-color: #f1f5f9;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.tab-btn:hover { background-color: #e2e8f0; }
+
+/* 3. Active Tab Styling */
+.tab-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+}
+
+/* Special Color for Ragging Tab */
+.tab-btn.ragging-tab.active {
+  background-color: #dc2626; /* Red */
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* 4. The "Arrow" Connector */
+.tab-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: -18px; /* Push it down to touch the line */
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px;
+  border-style: solid;
+  /* The arrow color matches the active background */
+  border-color: var(--primary-color) transparent transparent transparent; 
+}
+
+/* Red arrow for Ragging */
+.tab-btn.ragging-tab.active::after {
+  border-color: #dc2626 transparent transparent transparent;
+}
+
+/* 5. Two-Column Form Layout */
+.grievance-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Left & Right split */
+  gap: 40px;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Mobile Stack (1 Column) */
+@media (max-width: 768px) {
+  .grievance-form {
+    grid-template-columns: 1fr; /* Stack vertically */
+    gap: 20px;
+  }
+}
+
+/* 6. Form Elements */
+.file-upload-box {
+  border: 2px dashed #cbd5e1;
+  padding: 20px;
+  text-align: center;
+  border-radius: 8px;
+  color: #64748b;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: border-color 0.2s;
+}
+.file-upload-box:hover { border-color: var(--accent-color); color: var(--accent-color); }
+
+.ragging-alert-box {
+  border: 1px solid #fecaca;
+  background-color: #fef2f2;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  color: #991b1b;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+/* =========================================
+   PROFILE & PASSWORD SECTION
+   ========================================= */
+.password-edit-section {
+  background-color: #f8fafc;
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* =========================================
+   GRIEVANCE HISTORY LIST
+   ========================================= */
+.grievance-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.2s;
+}
+.grievance-item:hover { background-color: #f8fafc; }
+.grievance-item:last-child { border-bottom: none; }
+
+.grievance-info h4 { margin-bottom: 5px; color: var(--text-main); }
+.grievance-info span { font-size: 0.85rem; color: #64748b; margin-right: 15px; }
+
+/* Status Badges */
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.status-pending { background-color: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+.status-resolved { background-color: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+
+/* Buttons in List */
+.action-btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-left: 10px;
+  transition: all 0.2s;
+  color: var(--text-main);
+}
+.action-btn:hover { border-color: var(--accent-color); color: var(--accent-color); }
+.btn-feedback { border-color: #f59e0b; color: #d97706; }
+.btn-feedback:hover { background-color: #fffbeb; }
+
+/* =========================================
+   MODALS (POP-UPS)
+   ========================================= */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.2s;
+}
+
+.modal-content {
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  padding: 30px;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #94a3b8;
+}
+.close-modal-btn:hover { color: #ef4444; }
+
+/* Star Rating */
+.star-rating { font-size: 1.5rem; color: #e2e8f0; cursor: pointer; margin-right: 5px; transition: color 0.2s; }
+.star-rating.active { color: #f59e0b; }
+
+/* Keyframes */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
 
 
 
