@@ -2,32 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiHome, FiUser, FiFileText, FiLogOut, FiMenu, FiX, FiUpload, 
-  FiAlertTriangle, FiCheckCircle, FiEdit2, FiEye, FiMessageSquare, FiStar 
+  FiAlertTriangle, FiCheckCircle, FiEdit2, FiEye, FiMessageSquare, FiStar, 
+  FiFilter, FiLock, FiMail, FiHash, FiCalendar 
 } from 'react-icons/fi';
 import './App.css';
 import logo from './logo.png'; 
 
 function StudentDashboard() {
-  // --- NAVIGATION STATE ---
+  // ==========================================
+  //  STATE MANAGEMENT
+  // ==========================================
+  
+  // Navigation & Menu
   const [activeTab, setActiveTab] = useState('home'); 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   const navigate = useNavigate();
 
-  // --- HOME TAB STATES ---
+  // Home Tab (Grievance Form)
   const [activeGrievanceTab, setActiveGrievanceTab] = useState('Hostel');
-  const [academicYear, setAcademicYear] = useState(''); // For Academic Conditional Logic
-  const [sportsCategory, setSportsCategory] = useState(''); // For Sports Conditional Logic
+  const [academicYear, setAcademicYear] = useState(''); // Conditional logic for Academic
+  const [sportsCategory, setSportsCategory] = useState(''); // Conditional logic for Sports
 
-  // --- PROFILE TAB STATES ---
-  const [isEditingPassword, setIsEditingPassword] = useState(false);
+  // Profile Tab
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  // --- GRIEVANCE HISTORY & MODAL STATES ---
+  // Grievance History Tab
   const [selectedGrievance, setSelectedGrievance] = useState(null); 
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [feedbackRating, setFeedbackRating] = useState(0);
+  
+  // Filters
+  const [filterCategory, setFilterCategory] = useState('All');
+  const [filterStatus, setFilterStatus] = useState('All');
 
-  // --- MOCK DATA ---
+  // MOCK DATA (History)
   const dummyGrievances = [
     {
       id: 101,
@@ -55,14 +64,27 @@ function StudentDashboard() {
       status: 'Resolved',
       feedbackGiven: true,
       reply: 'Router has been replaced. Signal strength restored.'
+    },
+    {
+      id: 104,
+      date: '2023-10-10',
+      category: 'Sports/Gym - Equipment',
+      description: 'Treadmill 2 is broken.',
+      status: 'Pending',
+      feedbackGiven: false,
+      reply: null
     }
   ];
 
-  // --- SECURITY & SYNC ---
+  // ==========================================
+  //  SECURITY & SYNC LOGIC
+  // ==========================================
   useEffect(() => {
+    // 1. Check if logged in
     const token = localStorage.getItem('student_token');
     if (!token) navigate('/'); 
 
+    // 2. Listen for logout in other tabs
     const handleStorageChange = (e) => {
       if (e.key === 'student_token' && e.newValue === null) {
         navigate('/');
@@ -82,7 +104,7 @@ function StudentDashboard() {
     setIsMobileMenuOpen(false); 
   };
 
-  // --- MODAL HANDLERS ---
+  // --- Modal Helpers ---
   const openDetailModal = (grievance) => {
     setSelectedGrievance(grievance);
     setIsDetailModalOpen(true);
@@ -94,8 +116,9 @@ function StudentDashboard() {
     setIsFeedbackModalOpen(true);
   };
 
+
   // ==========================================
-  //  1. FORM COMPONENT RENDERERS
+  //  1. SUB-COMPONENTS: GRIEVANCE FORMS
   // ==========================================
 
   const renderHostelForm = () => (
@@ -114,19 +137,18 @@ function StudentDashboard() {
           <input type="text" className="form-input" placeholder="Ex: TF-60A" />
         </div>
         <div className="form-group">
-          <label className="form-label">Complaint Category</label>
+          <label className="form-label">Category</label>
           <select className="form-select form-input">
             <option>Select Issue</option>
-            <option>Wifi / Internet</option><option>Electrical (Fan/Light)</option>
-            <option>Plumbing</option><option>Carpentry</option>
-            <option>Racks / Furniture</option><option>Cots / Beds</option>
+            <option>Wifi / Internet</option><option>Electrical</option><option>Plumbing</option>
+            <option>Carpentry</option><option>Racks / Furniture</option><option>Cots / Beds</option>
           </select>
         </div>
       </div>
       <div>
         <div className="form-group">
           <label className="form-label">Describe the Issue</label>
-          <textarea className="form-input" rows="5" placeholder="Please describe the problem in detail..."></textarea>
+          <textarea className="form-input" rows="5" placeholder="Describe details..."></textarea>
         </div>
         <div className="file-upload-box">
           <FiUpload size={24} />
@@ -143,24 +165,22 @@ function StudentDashboard() {
           <label className="form-label">Select Dining Hall</label>
           <select className="form-select form-input">
             <option>Select DH</option>
-            <option>DH 1</option><option>DH 2</option><option>DH 3</option>
-            <option>DH 4</option><option>DH 5</option><option>DH 6</option>
+            <option>DH 1</option><option>DH 2</option><option>DH 3</option><option>DH 4</option>
           </select>
         </div>
         <div className="form-group">
-          <label className="form-label">Complaint Category</label>
+          <label className="form-label">Category</label>
           <select className="form-select form-input">
             <option>Select Issue</option>
-            <option>Food Quality</option><option>Cleanliness</option>
-            <option>Menu Discrepancy</option><option>Eggs & Fruits</option>
-            <option>Food Quantity</option><option>Equipment</option>
+            <option>Food Quality</option><option>Cleanliness</option><option>Menu Discrepancy</option>
+            <option>Eggs & Fruits</option><option>Food Quantity</option>
           </select>
         </div>
       </div>
       <div>
         <div className="form-group">
           <label className="form-label">Describe the Issue</label>
-          <textarea className="form-input" rows="5" placeholder="Describe what happened..."></textarea>
+          <textarea className="form-input" rows="5" placeholder="Describe details..."></textarea>
         </div>
         <div className="file-upload-box">
           <FiUpload size={24} />
@@ -175,20 +195,15 @@ function StudentDashboard() {
       <div>
         <div className="form-group">
           <label className="form-label">Select Year</label>
-          <select 
-            className="form-select form-input" 
-            onChange={(e) => setAcademicYear(e.target.value)}
-          >
+          <select className="form-select form-input" onChange={(e) => setAcademicYear(e.target.value)}>
             <option value="">Select Year</option>
-            <option value="PUC1">PUC 1</option><option value="PUC2">PUC 2</option>
-            <option value="ENG">E1 (Engg Year 1)</option><option value="ENG">E2 (Engg Year 2)</option>
-            <option value="ENG">E3 (Engg Year 3)</option><option value="ENG">E4 (Engg Year 4)</option>
+            <option value="PUC">PUC 1 / PUC 2</option>
+            <option value="ENG">Engineering (E1-E4)</option>
           </select>
         </div>
-
         {academicYear === 'ENG' && (
           <div className="form-group fade-in">
-            <label className="form-label">Select Department</label>
+            <label className="form-label">Department</label>
             <select className="form-select form-input">
               <option>Select Branch</option>
               <option>CSE</option><option>ECE</option><option>MECH</option>
@@ -196,25 +211,21 @@ function StudentDashboard() {
             </select>
           </div>
         )}
-
         <div className="form-group">
-          <label className="form-label">Complaint Category</label>
+          <label className="form-label">Category</label>
           <select className="form-select form-input">
             <option>Select Issue</option>
-            <option>Lab Equipment</option><option>Wifi</option>
-            <option>Classroom Equipment</option><option>Exams</option><option>ID Cards</option>
+            <option>Lab Equipment</option><option>Wifi</option><option>Classroom Equipment</option>
+            <option>Exams</option><option>ID Cards</option>
           </select>
         </div>
       </div>
       <div>
         <div className="form-group">
           <label className="form-label">Describe the Issue</label>
-          <textarea className="form-input" rows="5" placeholder="Describe the academic issue..."></textarea>
+          <textarea className="form-input" rows="5" placeholder="Describe details..."></textarea>
         </div>
-        <div className="file-upload-box">
-          <FiUpload size={24} />
-          <p>Attach Photo (Optional)</p>
-        </div>
+        <div className="file-upload-box"><FiUpload size={24} /><p>Attach Photo (Optional)</p></div>
       </div>
     </>
   );
@@ -223,24 +234,18 @@ function StudentDashboard() {
     <>
       <div>
         <div className="form-group">
-          <label className="form-label">Select Category</label>
+          <label className="form-label">Category</label>
           <select className="form-select form-input">
-            <option>Select Issue</option>
-            <option>Doctor Availability</option>
-            <option>Medicine Availability</option>
-            <option>Laboratory Availability</option>
+            <option>Doctor Availability</option><option>Medicine Availability</option><option>Laboratory</option>
           </select>
         </div>
       </div>
       <div>
         <div className="form-group">
-          <label className="form-label">Describe the Issue</label>
-          <textarea className="form-input" rows="5" placeholder="Describe the hospital issue..."></textarea>
+          <label className="form-label">Description</label>
+          <textarea className="form-input" rows="5"></textarea>
         </div>
-        <div className="file-upload-box">
-          <FiUpload size={24} />
-          <p>Attach Photo (Optional)</p>
-        </div>
+        <div className="file-upload-box"><FiUpload size={24} /><p>Attach Photo</p></div>
       </div>
     </>
   );
@@ -250,30 +255,19 @@ function StudentDashboard() {
       <div style={{gridColumn: "1 / -1"}}>
         <div className="ragging-alert-box">
           <FiAlertTriangle size={24} />
-          <div>
-            <strong>Strict Action Warning:</strong> Ragging is a serious offense. Your identity will be protected if requested.
-          </div>
+          <div><strong>Strict Action Warning:</strong> Ragging is a serious offense. Your identity is protected.</div>
         </div>
       </div>
       <div>
         <div className="form-group">
-          <label className="form-label" style={{color: "#991b1b"}}>Names of Students Involved</label>
-          <textarea className="form-input" rows="3" placeholder="Enter names and their year/branch..." style={{borderColor: "#fca5a5"}}></textarea>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Incident Year/Time</label>
-          <input type="text" className="form-input" placeholder="e.g. Yesterday night, Batch 2024" />
+          <label className="form-label" style={{color: "#991b1b"}}>Student Names & Year</label>
+          <textarea className="form-input" rows="3" style={{borderColor: "#fca5a5"}} placeholder="Names of seniors involved..."></textarea>
         </div>
       </div>
       <div>
         <div className="form-group">
-          <label className="form-label" style={{color: "#991b1b"}}>Detailed Complaint to Director</label>
-          <textarea 
-            className="form-input" 
-            rows="8" 
-            defaultValue="To The Director:&#13;&#10;&#13;&#10;"
-            style={{borderColor: "#fca5a5"}}
-          ></textarea>
+          <label className="form-label" style={{color: "#991b1b"}}>Complaint to Director</label>
+          <textarea className="form-input" rows="8" defaultValue="To The Director:&#13;&#10;&#13;&#10;" style={{borderColor: "#fca5a5"}}></textarea>
         </div>
       </div>
     </>
@@ -283,47 +277,37 @@ function StudentDashboard() {
     <>
       <div>
         <div className="form-group">
-          <label className="form-label">Select Category</label>
-          <select 
-            className="form-select form-input"
-            onChange={(e) => setSportsCategory(e.target.value)}
-          >
+          <label className="form-label">Category</label>
+          <select className="form-select form-input" onChange={(e) => setSportsCategory(e.target.value)}>
             <option value="">Select Type</option>
-            <option value="sports">Sports / Grounds</option>
-            <option value="gym">Gymnasium</option>
+            <option value="sports">Sports</option>
+            <option value="gym">Gym</option>
           </select>
         </div>
-
         {sportsCategory === 'sports' && (
            <div className="form-group fade-in">
              <label className="form-label">Select Sport</label>
              <select className="form-select form-input">
-               <option>Select Sport</option>
-               <option>Football</option><option>Cricket</option><option>Volleyball</option>
-               <option>Badminton</option><option>Softball</option><option>Running</option><option>Basketball</option>
+               <option>Cricket</option><option>Football</option><option>Badminton</option>
+               <option>Volleyball</option><option>Basketball</option>
              </select>
            </div>
         )}
-
         {sportsCategory === 'gym' && (
            <div className="form-group fade-in">
-             <label className="form-label">Select Gym Issue</label>
+             <label className="form-label">Gym Issue</label>
              <select className="form-select form-input">
-               <option>Select Issue</option>
-               <option>Equipment</option><option>Time Slots</option>
+               <option>Equipment Damage</option><option>Time Slots</option>
              </select>
            </div>
         )}
       </div>
       <div>
         <div className="form-group">
-          <label className="form-label">Describe the Issue</label>
-          <textarea className="form-input" rows="5" placeholder="Describe the issue..."></textarea>
+          <label className="form-label">Description</label>
+          <textarea className="form-input" rows="5"></textarea>
         </div>
-        <div className="file-upload-box">
-          <FiUpload size={24} />
-          <p>Attach Photo (Optional)</p>
-        </div>
+        <div className="file-upload-box"><FiUpload size={24} /><p>Attach Photo</p></div>
       </div>
     </>
   );
@@ -332,22 +316,21 @@ function StudentDashboard() {
     <>
       <div>
         <div className="form-group">
-          <label className="form-label">Select Category</label>
+          <label className="form-label">Category</label>
           <select className="form-select form-input">
-            <option>Select Issue</option>
-            <option>Holidays</option><option>Uniforms</option>
-            <option>Laptops</option><option>Leaves & Outings</option>
+            <option>Holidays</option><option>Uniforms</option><option>Laptops</option><option>Outings</option>
           </select>
         </div>
       </div>
       <div>
         <div className="form-group">
-          <label className="form-label">Describe the Issue</label>
-          <textarea className="form-input" rows="5" placeholder="Describe the issue..."></textarea>
+          <label className="form-label">Description</label>
+          <textarea className="form-input" rows="5"></textarea>
         </div>
       </div>
     </>
   );
+
 
   // ==========================================
   //  2. MAIN TAB RENDERERS
@@ -360,7 +343,6 @@ function StudentDashboard() {
         <p>Select a category below to lodge your grievance.</p>
       </div>
 
-      {/* Dynamic Tabs */}
       <div className="tabs-container">
         {['Hostel', 'Mess', 'Academic', 'Hospital', 'Ragging', 'Sports/Gym', 'Others'].map((tab) => (
           <div 
@@ -373,7 +355,6 @@ function StudentDashboard() {
         ))}
       </div>
 
-      {/* Form Card */}
       <div className="card">
         <h3 style={{marginBottom: "20px", color: activeGrievanceTab === 'Ragging' ? '#dc2626' : '#334155'}}>
             {activeGrievanceTab} Grievance Form
@@ -405,104 +386,123 @@ function StudentDashboard() {
       <div className="content-header">
         <h2>👤 My Profile</h2>
       </div>
-      <div className="card" style={{ maxWidth: "800px" }}>
-        <table className="info-table">
-          <tbody>
-            <tr><td className="info-label">Full Name:</td><td className="info-value">Yasarapu Hem Gowtham</td></tr>
-            <tr><td className="info-label">Student ID:</td><td className="info-value">N180000</td></tr>
-            <tr><td className="info-label">Year:</td><td className="info-value">E4 (Final Year)</td></tr>
-            <tr><td className="info-label">Branch:</td><td className="info-value">Computer Science (CSE)</td></tr>
-            <tr><td className="info-label">Email:</td><td className="info-value">n180000@rguktn.ac.in</td></tr>
-            <tr><td className="info-label">Password:</td><td className="info-value">••••••••</td></tr>
-          </tbody>
-        </table>
+      
+      <div className="card" style={{ padding: "0", overflow: "hidden" }}>
+        {/* Banner & Avatar */}
+        <div className="profile-header-banner">
+            <div className="profile-avatar-section">
+                <FiUser />
+            </div>
+        </div>
 
-        {!isEditingPassword ? (
+        <div style={{ padding: "0 20px 20px", marginTop: "60px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "20px" }}>
+            <div>
+                <h2 style={{ color: "#1e293b", marginBottom: "5px" }}>Yasarapu Hem Gowtham</h2>
+                <p style={{ color: "#64748b", fontWeight: "500" }}>Computer Science & Engineering</p>
+            </div>
             <button 
                 className="login-btn" 
-                style={{ marginTop: "20px", width: "auto", display: "flex", alignItems: "center", gap: "8px", backgroundColor: "#334155" }}
-                onClick={() => setIsEditingPassword(true)}
+                style={{ width: "auto", display: "flex", alignItems: "center", gap: "8px", backgroundColor: "#334155" }}
+                onClick={() => setIsPasswordModalOpen(true)}
             >
-                <FiEdit2 /> Change Password
+                <FiLock /> Change Password
             </button>
-        ) : (
-            <div className="password-edit-section">
-                <h4 style={{marginBottom: "15px", color: "#334155"}}>Change Password</h4>
-                <div className="form-group">
-                    <label className="form-label">Old Password</label>
-                    <input type="password" class="form-input" placeholder="Enter current password" />
-                </div>
-                <div className="grievance-form" style={{marginTop: "10px", marginBottom: "10px"}}>
-                    <div className="form-group">
-                        <label className="form-label">New Password</label>
-                        <input type="password" class="form-input" placeholder="New password" />
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Confirm New Password</label>
-                        <input type="password" class="form-input" placeholder="Confirm new password" />
-                    </div>
-                </div>
-                <div style={{display: "flex", gap: "10px"}}>
-                    <button className="login-btn" style={{width: "auto"}}>Save Changes</button>
-                    <button 
-                        className="login-btn" 
-                        style={{width: "auto", backgroundColor: "white", color: "#334155", border: "1px solid #cbd5e1"}}
-                        onClick={() => setIsEditingPassword(false)}
-                    >
-                        Cancel
-                    </button>
-                </div>
+        </div>
+
+        <hr style={{ border: "0", borderTop: "1px solid #e2e8f0", margin: "20px 0" }} />
+
+        {/* Info Grid Tiles */}
+        <div className="profile-details-grid">
+            <div className="info-tile">
+                <span className="tile-label"><FiHash style={{marginBottom: "-2px"}}/> Student ID</span>
+                <span className="tile-value">N180000</span>
             </div>
-        )}
+            <div className="info-tile">
+                <span className="tile-label"><FiCalendar style={{marginBottom: "-2px"}}/> Current Year</span>
+                <span className="tile-value">E4 (Final Year)</span>
+            </div>
+            <div className="info-tile">
+                <span className="tile-label"><FiMail style={{marginBottom: "-2px"}}/> College Email</span>
+                <span className="tile-value">n180000@rguktn.ac.in</span>
+            </div>
+            <div className="info-tile">
+                <span className="tile-label"><FiUser style={{marginBottom: "-2px"}}/> Gender</span>
+                <span className="tile-value">Male</span>
+            </div>
+        </div>
       </div>
     </div>
   );
 
-  const renderGrievances = () => (
-    <div className="fade-in">
-      <div className="content-header">
-        <h2>📂 My Grievance History</h2>
-      </div>
-      
-      <div className="card" style={{ padding: "0" }}> 
-        {dummyGrievances.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-                <FiFileText size={40} style={{ marginBottom: "10px", opacity: 0.5 }} />
-                <p>No past grievances found.</p>
-            </div>
-        ) : (
-            <div>
-                {dummyGrievances.map((item) => (
-                    <div className="grievance-item" key={item.id}>
-                        <div className="grievance-info">
-                            <h4>{item.category}</h4>
-                            <div style={{display: "flex", alignItems: "center", flexWrap: "wrap", gap: "5px"}}>
-                                <span>📅 {item.date}</span>
-                                <span className={`status-badge ${item.status === 'Resolved' ? 'status-resolved' : 'status-pending'}`}>
-                                    {item.status}
-                                </span>
+  const renderGrievances = () => {
+    // FILTER LOGIC
+    const filteredList = dummyGrievances.filter(item => {
+        const matchCategory = filterCategory === 'All' || item.category.includes(filterCategory);
+        const matchStatus = filterStatus === 'All' || item.status === filterStatus;
+        return matchCategory && matchStatus;
+    });
+
+    return (
+        <div className="fade-in">
+        <div className="content-header">
+            <h2>📂 My Grievance History</h2>
+        </div>
+        
+        {/* Filter Bar */}
+        <div className="filter-bar">
+            <div className="filter-label"><FiFilter /> Filter By:</div>
+            <select className="filter-select" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+                <option value="All">All Categories</option>
+                <option value="Hostel">Hostel</option><option value="Mess">Mess</option>
+                <option value="Academic">Academic</option><option value="Hospital">Hospital</option>
+                <option value="Sports">Sports</option><option value="Ragging">Ragging</option>
+            </select>
+            <select className="filter-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                <option value="All">All Statuses</option>
+                <option value="Pending">Pending</option><option value="Resolved">Resolved</option>
+            </select>
+        </div>
+
+        <div className="card" style={{ padding: "0" }}> 
+            {filteredList.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
+                    <FiFileText size={40} style={{ marginBottom: "10px", opacity: 0.5 }} />
+                    <p>No grievances match your filters.</p>
+                </div>
+            ) : (
+                <div>
+                    {filteredList.map((item) => (
+                        <div className="grievance-item" key={item.id}>
+                            <div className="grievance-info">
+                                <h4>{item.category}</h4>
+                                <div style={{display: "flex", alignItems: "center", flexWrap: "wrap", gap: "5px"}}>
+                                    <span>📅 {item.date}</span>
+                                    <span className={`status-badge ${item.status === 'Resolved' ? 'status-resolved' : 'status-pending'}`}>
+                                        {item.status}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style={{display: "flex"}}>
+                                <button className="action-btn" onClick={() => openDetailModal(item)}>
+                                    <FiEye style={{marginRight: "5px"}}/> View
+                                </button>
+                                {item.status === 'Resolved' && !item.feedbackGiven && (
+                                    <button className="action-btn btn-feedback" onClick={() => openFeedbackModal(item)}>
+                                        <FiMessageSquare style={{marginRight: "5px"}}/> Feedback
+                                    </button>
+                                )}
                             </div>
                         </div>
-                        <div style={{display: "flex"}}>
-                            <button className="action-btn" onClick={() => openDetailModal(item)}>
-                                <FiEye style={{marginRight: "5px"}}/> View
-                            </button>
-                            {item.status === 'Resolved' && !item.feedbackGiven && (
-                                <button className="action-btn btn-feedback" onClick={() => openFeedbackModal(item)}>
-                                    <FiMessageSquare style={{marginRight: "5px"}}/> Feedback
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        )}
-      </div>
-    </div>
-  );
+                    ))}
+                </div>
+            )}
+        </div>
+        </div>
+    );
+  };
 
   // ==========================================
-  //  3. MAIN RENDER RETURN
+  //  3. MAIN RENDER
   // ==========================================
 
   return (
@@ -547,66 +547,71 @@ function StudentDashboard() {
 
       {/* --- MODALS --- */}
       
-      {/* DETAIL MODAL */}
+      {/* 1. PASSWORD CHANGE MODAL */}
+      {isPasswordModalOpen && (
+        <div className="modal-overlay">
+            <div className="modal-content">
+                <button className="close-modal-btn" onClick={() => setIsPasswordModalOpen(false)}><FiX /></button>
+                <h3 style={{marginBottom: "20px", color: "#334155"}}>Change Password</h3>
+                <div className="form-group">
+                    <label className="form-label">Current Password</label>
+                    <div className="input-wrapper"><FiLock className="input-icon"/><input type="password" class="form-input form-input-with-icon" placeholder="Old password" /></div>
+                </div>
+                <hr style={{margin: "20px 0", borderTop: "1px solid #e2e8f0"}}/>
+                <div className="form-group">
+                    <label className="form-label">New Password</label>
+                    <div className="input-wrapper"><FiLock className="input-icon"/><input type="password" class="form-input form-input-with-icon" placeholder="New password" /></div>
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Confirm New Password</label>
+                    <div className="input-wrapper"><FiLock className="input-icon"/><input type="password" class="form-input form-input-with-icon" placeholder="Confirm" /></div>
+                </div>
+                <div style={{display: "flex", gap: "10px", marginTop: "20px"}}>
+                    <button className="login-btn" onClick={() => setIsPasswordModalOpen(false)}>Update Password</button>
+                    <button className="login-btn" style={{backgroundColor: "white", color: "#64748b", border: "1px solid #cbd5e1"}} onClick={() => setIsPasswordModalOpen(false)}>Cancel</button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* 2. DETAIL MODAL */}
       {isDetailModalOpen && selectedGrievance && (
         <div className="modal-overlay">
             <div className="modal-content">
                 <button className="close-modal-btn" onClick={() => setIsDetailModalOpen(false)}><FiX /></button>
-                <h3 style={{marginBottom: "20px", color: "#334155"}}>Complaint Details (ID: #{selectedGrievance.id})</h3>
+                <h3 style={{marginBottom: "20px", color: "#334155"}}>Complaint #{selectedGrievance.id}</h3>
                 <table className="info-table">
                     <tbody>
                         <tr><td className="info-label">Date:</td><td className="info-value">{selectedGrievance.date}</td></tr>
                         <tr><td className="info-label">Category:</td><td className="info-value">{selectedGrievance.category}</td></tr>
-                        <tr>
-                            <td className="info-label">Status:</td>
-                            <td>
-                                <span className={`status-badge ${selectedGrievance.status === 'Resolved' ? 'status-resolved' : 'status-pending'}`}>
-                                    {selectedGrievance.status}
-                                </span>
-                            </td>
-                        </tr>
+                        <tr><td className="info-label">Status:</td><td><span className={`status-badge ${selectedGrievance.status === 'Resolved' ? 'status-resolved' : 'status-pending'}`}>{selectedGrievance.status}</span></td></tr>
                     </tbody>
                 </table>
                 <div style={{marginTop: "20px"}}>
                     <h5 style={{color: "#64748b", marginBottom: "8px"}}>Description:</h5>
-                    <p style={{background: "#f8fafc", padding: "15px", borderRadius: "8px", fontSize: "0.95rem"}}>
-                        {selectedGrievance.description}
-                    </p>
+                    <p style={{background: "#f8fafc", padding: "15px", borderRadius: "8px", fontSize: "0.95rem"}}>{selectedGrievance.description}</p>
                 </div>
                 {selectedGrievance.reply && (
                     <div style={{marginTop: "20px"}}>
                         <h5 style={{color: "#10b981", marginBottom: "8px"}}>Authority Reply:</h5>
-                        <p style={{background: "#f0fdf4", padding: "15px", borderRadius: "8px", fontSize: "0.95rem", border: "1px solid #bbf7d0"}}>
-                            {selectedGrievance.reply}
-                        </p>
+                        <p style={{background: "#f0fdf4", padding: "15px", borderRadius: "8px", fontSize: "0.95rem", border: "1px solid #bbf7d0"}}>{selectedGrievance.reply}</p>
                     </div>
                 )}
             </div>
         </div>
       )}
 
-      {/* FEEDBACK MODAL */}
+      {/* 3. FEEDBACK MODAL */}
       {isFeedbackModalOpen && selectedGrievance && (
         <div className="modal-overlay">
             <div className="modal-content">
                 <button className="close-modal-btn" onClick={() => setIsFeedbackModalOpen(false)}><FiX /></button>
                 <h3 style={{marginBottom: "10px", textAlign: "center"}}>Rate Resolution</h3>
-                <p style={{textAlign: "center", color: "#64748b", marginBottom: "20px"}}>
-                    How satisfied are you with the resolution for <strong>{selectedGrievance.category}</strong>?
-                </p>
+                <p style={{textAlign: "center", color: "#64748b", marginBottom: "20px"}}>How satisfied are you with the resolution?</p>
                 <div style={{display: "flex", justifyContent: "center", marginBottom: "20px"}}>
                     {[1, 2, 3, 4, 5].map((star) => (
-                        <FiStar 
-                            key={star} 
-                            className={`star-rating ${star <= feedbackRating ? 'active' : ''}`}
-                            onClick={() => setFeedbackRating(star)}
-                            fill={star <= feedbackRating ? "#f59e0b" : "none"}
-                        />
+                        <FiStar key={star} className={`star-rating ${star <= feedbackRating ? 'active' : ''}`} onClick={() => setFeedbackRating(star)} fill={star <= feedbackRating ? "#f59e0b" : "none"} />
                     ))}
-                </div>
-                <div className="form-group">
-                    <label className="form-label">Additional Comments</label>
-                    <textarea className="form-input" rows="3" placeholder="Was the issue resolved on time?"></textarea>
                 </div>
                 <button className="login-btn" onClick={() => setIsFeedbackModalOpen(false)}>Submit Feedback</button>
             </div>
