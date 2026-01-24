@@ -5,6 +5,7 @@ import AdminLogin from './AdminLogin'; // Import the new file
 import StudentDashboard from './StudentDashboard';
 import AuthorityDashboard from './AuthorityDashboard';
 import AdminDashboard from './AdminDashboard';
+import NotFound from './NotFound';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/authority-dashboard" element={<AuthorityDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

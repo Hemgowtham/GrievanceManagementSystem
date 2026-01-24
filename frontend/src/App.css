@@ -846,6 +846,275 @@ body { background-color: var(--bg-main); height: 100vh; display: flex; flex-dire
   object-fit: cover;
 }
 
+/* =========================================
+   NEW HOME UI & ANIMATIONS
+   ========================================= */
+
+/* 1. Grid Layout for the Boxes */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+/* 2. Individual Box Style */
+.category-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 15px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.category-card:hover {
+  background-color: #f8fafc;
+  transform: translateY(-3px);
+  border-color: #cbd5e1;
+}
+
+/* 3. Active (Selected) Box Style */
+.category-card.active {
+  background-color: #eff6ff; /* Light Blue Background */
+  border-color: #3b82f6;     /* Blue Border */
+  color: #2563eb;            /* Blue Text */
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+  transform: translateY(-3px);
+}
+
+/* Special Style for Ragging Box */
+.category-card.ragging-active {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+  color: #dc2626;
+  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+}
+
+/* 4. Transition Animation */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-content {
+  animation: slideUpFade 0.4s ease-out forwards;
+}
+
+
+/* =========================================
+   HEADER PROFILE & DROPDOWN
+   ========================================= */
+.header-right {
+  margin-left: auto; /* Pushes it to the right */
+  position: relative;
+}
+
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 20px;
+  transition: background 0.2s;
+  border: 1px solid transparent;
+}
+
+.profile-trigger:hover {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.header-avatar-small {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-user-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--secondary-color);
+}
+
+/* Dropdown Menu */
+.profile-dropdown-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  width: 180px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 200;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f8fafc;
+  color: var(--primary-color);
+}
+
+.dropdown-item.logout-option {
+  color: var(--danger);
+  border-top: 1px solid #f1f5f9;
+}
+.dropdown-item.logout-option:hover {
+  background-color: #fef2f2;
+}
+
+
+/* =========================================
+   MOBILE OPTIMIZATIONS (SCROLLABLE LIST)
+   ========================================= */
+
+/* Adjust grid for better spacing on desktop */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Smaller min-width */
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* Smaller Cards */
+.category-card {
+  padding: 12px 5px; /* Reduced padding */
+  font-size: 0.8rem; /* Smaller Text */
+}
+.category-card svg {
+  width: 20px; height: 20px; /* Smaller Icons */
+  margin-bottom: 5px;
+}
+
+/* MOBILE SPECIFIC: Horizontal Scrolling */
+@media (max-width: 768px) {
+  /* Hide user name on small phones to save space */
+  .header-user-name { display: none; }
+  
+  .header-text p { display: none; } /* Hide "STUDENT DASHBOARD" subtitle on mobile */
+
+  .category-grid {
+    display: flex;             /* Switch from Grid to Flex */
+    overflow-x: auto;          /* Enable Horizontal Scroll */
+    padding-bottom: 10px;      /* Space for scrollbar */
+    scroll-behavior: smooth;   /* Smooth scrolling */
+    -webkit-overflow-scrolling: touch; /* Momentum scroll on iOS */
+  }
+
+  .category-card {
+    min-width: 90px;          /* Fixed width for scroll items */
+    flex-shrink: 0;           /* Prevent shrinking */
+  }
+  
+  /* Hide Scrollbar visually but keep functionality */
+  .category-grid::-webkit-scrollbar { display: none; }
+}
+
+/* --- 404 ERROR PAGE --- */
+.not-found-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    padding: 20px;
+}
+
+.not-found-content {
+    background: white;
+    padding: 50px 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.error-icon-box {
+    width: 80px;
+    height: 80px;
+    background-color: #fee2e2;
+    color: #dc2626;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin: 0 auto 20px;
+}
+
+.error-code {
+    font-size: 5rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1;
+}
+
+.error-message {
+    font-size: 1.5rem;
+    color: #334155;
+    margin: 10px 0;
+}
+
+.error-description {
+    color: #64748b;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.btn-secondary {
+    background-color: white;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+
+.btn-secondary:hover {
+    background-color: #f8fafc;
+}
 
 
 /* =========================================

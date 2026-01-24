@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi'; // Clean Icons
+import { FiLock, FiEye, FiEyeOff, FiUser, FiAlertCircle } from 'react-icons/fi'; 
 import './App.css'; 
 import logo from './logo.png'; 
 
-
 function Login() {
+  const navigate = useNavigate();
+
   const [role, setRole] = useState('student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // Toggle State
+  const [showPassword, setShowPassword] = useState(false); 
   const [status, setStatus] = useState(null); 
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-
+ 
   const handleLogin = async (e) => {
     e.preventDefault();
     setStatus(null);
@@ -26,23 +26,55 @@ function Login() {
         password: password
       });
 
-      if (response.data.message === 'Login Successful') {
-        setStatus({ type: 'success', text: 'Credentials Verified. Redirecting...' });
+      if (response.data.status === 'success') {
+        const serverRole = response.data.user_type; 
+        const token = response.data.token;
         
-        // --- UPDATED: USE UNIQUE KEYS ---
-        if (role === 'student') {
-            localStorage.setItem('student_token', 'active');
-        } else {
-            localStorage.setItem('authority_token', 'active');
+        // Prepare User Data Object
+        const userData = JSON.stringify({
+            username: response.data.username,
+            name: response.data.name,
+            user_type: response.data.user_type
+        });
+
+        // --- RESTRICT ADMINS ---
+        if (serverRole === 'admin') {
+            setStatus({ type: 'error', text: 'Incorrect ID or password.' });
+            setIsLoading(false);
+            return; 
         }
-        // --------------------------------
+
+        // --- SUCCESS LOGIC ---
+        setStatus({ type: 'success', text: 'Login successful. Redirecting...' });
 
         setTimeout(() => {
-            role === 'authority' ? navigate('/authority-dashboard') : navigate('/student-dashboard');
+            if (serverRole === 'student') {
+                localStorage.setItem('student_token', token);
+                localStorage.setItem('student_user', userData); 
+                navigate('/student-dashboard');
+            } 
+            else if (serverRole === 'authority') {
+                localStorage.setItem('authority_token', token);
+                localStorage.setItem('authority_user', userData); 
+                navigate('/authority-dashboard');
+            } 
+            else {
+                navigate(role === 'authority' ? '/authority-dashboard' : '/student-dashboard');
+            }
         }, 800);
+
+      } else {
+        // Fallback for unexpected API status
+        setStatus({ type: 'error', text: 'Incorrect ID or password.' });
+        setIsLoading(false);
       }
     } catch (error) {
-      setStatus({ type: 'error', text: 'We could not verify your credentials.' });
+      // Differentiate between "Wrong Password" (401) and "Server Down"
+      if (error.response && error.response.status === 401) {
+          setStatus({ type: 'error', text: 'Incorrect ID or password.' });
+      } else {
+          setStatus({ type: 'error', text: 'Server unreachable. Please try again later.' });
+      }
       setIsLoading(false);
     }
   };
@@ -62,7 +94,7 @@ function Login() {
           
           <div className="welcome-text">
             <h2>{role === 'student' ? 'Student Portal' : 'Authority Portal'}</h2>
-            <p>Please enter your details to login.</p>
+            <p>Please enter your credentials to continue.</p>
           </div>
 
           {/* Slider */}
@@ -74,15 +106,15 @@ function Login() {
 
           <form onSubmit={handleLogin}>
             
-            {/* EMAIL INPUT */}
+            {/* ID INPUT */}
             <div className="form-group">
-              <label className="form-label">College Email ID</label>
+              <label className="form-label">{role === 'student' ? 'Student ID' : 'Employee ID'}</label>
               <div className="input-wrapper">
-                <FiMail className="input-icon" /> {/* Mail Icon */}
+                <FiUser className="input-icon" /> 
                 <input
                   className="form-input form-input-with-icon"
                   type="text"
-                  placeholder="id@rguktn.ac.in"
+                  placeholder={role === 'student' ? "Eg: N180000" : "Eg: E210042"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -95,17 +127,16 @@ function Login() {
             <div className="form-group">
               <label className="form-label">Password</label>
               <div className="input-wrapper">
-                <FiLock className="input-icon" /> {/* Lock Icon */}
+                <FiLock className="input-icon" /> 
                 <input
                   className="form-input form-input-with-icon"
-                  type={showPassword ? "text" : "password"} // Toggles Type
+                  type={showPassword ? "text" : "password"} 
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={isLoading}
                 />
-                {/* Eye Icon Button */}
                 <div className="password-toggle-icon" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </div>
@@ -113,11 +144,17 @@ function Login() {
             </div>
 
             <button type="submit" className="login-btn" disabled={isLoading}>
-              {isLoading ? 'Verifying . . .' : 'Login'}
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
-          {status && <div className={`alert-box ${status.type === 'error' ? 'alert-error' : 'alert-success'}`}>{status.text}</div>}
+          {status && (
+             <div className={`alert-box ${status.type === 'error' ? 'alert-error' : 'alert-success'}`} style={{marginTop:'15px'}}>
+                 {status.type === 'error' ? <FiAlertCircle style={{marginRight:'5px'}}/> : null}
+                 {status.text}
+             </div>
+          )}
+
         </div>
       </div>
     </>
