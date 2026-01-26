@@ -3,14 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; 
 import { 
   FiHome, FiUser, FiLogOut, FiMenu, FiX, FiFilter, FiLock, FiMail, 
-  FiBriefcase, FiCheckCircle, FiAlertCircle, FiClock, FiActivity, FiPrinter, FiSearch
+  FiBriefcase, FiCheckCircle, FiAlertCircle, FiClock, FiActivity, FiPrinter, FiSearch, FiBarChart2, FiEdit3, FiChevronDown
 } from 'react-icons/fi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable'; 
 import './App.css';
 import logo from './logo.png'; 
 import userAvatar from './logo.png'; 
-
+import { 
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend 
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 
 // API CONFIG
 const API_BASE = 'http://127.0.0.1:8000/api';
@@ -30,6 +33,8 @@ function AuthorityDashboard() {
   const [activeTab, setActiveTab] = useState('home'); 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   const navigate = useNavigate();
+
+const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
   // Profile Modal
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -92,24 +97,112 @@ function AuthorityDashboard() {
       }
   };
 
+  // --- HELPER: Professional Average Time Calculation ---
+  const calculateAvgTime = (grievancesList) => {
+    // 1. Filter only resolved items that have a resolution date
+    const resolvedGs = grievancesList.filter(g => g.status === 'Resolved' && g.resolved_at);
+    
+    if (resolvedGs.length === 0) return 'N/A';
+
+    let totalMs = 0;
+    resolvedGs.forEach(g => {
+        const start = new Date(g.created_at);
+        const end = new Date(g.resolved_at);
+        // Prevent negative time (in case of server clock skew)
+        if (end > start) {
+            totalMs += (end - start);
+        }
+    });
+
+    // 2. Get Average in Milliseconds
+    const avgMs = totalMs / resolvedGs.length;
+
+    // 3. Convert to larger units
+    const avgMins = avgMs / (1000 * 60);
+    const avgHours = avgMins / 60;
+    const avgDays = avgHours / 24;
+
+    // 4. Return formatted string based on duration magnitude
+    if (avgMins < 60) {
+        // Less than 1 hour -> Show Minutes (e.g., "45 Mins")
+        return `${Math.round(avgMins)} Mins`;
+    } else if (avgHours < 24) {
+        // Less than 1 day -> Show Hours with 1 decimal (e.g., "5.5 Hours")
+        return `${avgHours.toFixed(1)} Hours`;
+    } else {
+        // More than 1 day -> Show Days with 1 decimal (e.g., "2.4 Days")
+        return `${avgDays.toFixed(1)} Days`;
+    }
+  };
+
   const fetchGrievances = async (empId) => {
       try {
-          // Verify Backend is filtering by role='authority' and user_id=empId
           const res = await axios.get(`${API_BASE}/grievances/?role=authority&user_id=${empId}`);
-          
           const allData = res.data;
           
-          // Separate into Pending vs History
           const pending = allData.filter(g => g.status === 'Pending');
-          const history = allData.filter(g => g.status === 'Resolved' || g.status === 'Escalated' || g.status === 'Rejected');
+          const history = allData.filter(g => ['Resolved', 'Escalated', 'Rejected'].includes(g.status));
+          const resolvedCount = allData.filter(g => g.status === 'Resolved').length;
           
           setPendingGrievances(pending);
           setSolvedHistory(history);
-          setStats({ pending: pending.length, solved: history.length });
 
-      } catch (error) {
-          console.error("Error fetching grievances:", error);
-      }
+          // --- UPDATE STATS HERE ---
+          setStats({ 
+              pending: pending.length, 
+              solved: history.length,
+              // Calculate real average time using the helper
+              avgTime: calculateAvgTime(allData), 
+              rate: allData.length > 0 ? `${Math.round((resolvedCount / allData.length) * 100)}%` : '0%'
+          });
+
+      } catch (error) { console.error("Error fetching grievances:", error); }
+  };
+
+  // ==========================================
+  //  PDF GENERATION (PERFORMANCE REPORT)
+  // ==========================================
+  const generateMyReport = () => {
+    const doc = new jsPDF();
+    
+    // Header
+    try { doc.addImage(logo, 'PNG', 14, 10, 20, 20); } catch(e) {}
+    doc.setFontSize(18); doc.setTextColor(30, 41, 59); doc.text("RGUKT NUZVID", 40, 20);
+    doc.setFontSize(10); doc.setTextColor(100); doc.text("Smart Grievance Management System", 40, 26);
+    
+    doc.setFontSize(11); doc.setTextColor(0); 
+    doc.text(`Authority Performance Report`, 14, 45);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 196, 20, {align: 'right'});
+
+    // User Details
+    if(fullProfile) {
+        doc.text(`Name: ${fullProfile.name}`, 14, 55);
+        doc.text(`Department: ${fullProfile.department}`, 14, 62);
+    }
+
+    // Stats Table
+    autoTable(doc, {
+        startY: 70,
+        head: [['Performance Metric', 'Value']],
+        body: [
+            ['Total Assigned', stats.total],
+            ['Resolved Successfully', stats.resolved],
+            ['Pending Action', stats.pending],
+            ['Escalated', stats.escalated],
+            ['Resolution Rate', stats.rate],
+            ['Avg Response Time', stats.avgTime]
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [30, 41, 59] }
+    });
+
+    // Signature Footer
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFontSize(9); doc.setTextColor(150);
+    doc.text("Authorized Signature", 14, pageHeight - 30);
+    doc.text("_______________________", 14, pageHeight - 20);
+
+    doc.save('My_Performance_Report.pdf');
   };
 
   const handleLogout = () => {
@@ -251,62 +344,132 @@ function AuthorityDashboard() {
   // ==========================================
   //  TAB 1: HOME (ACTION CENTER)
   // ==========================================
-  const renderHome = () => (
+  const renderHome = () => {
+    // Logic for Graph Data
+    const getGraphData = () => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const data = new Array(12).fill(0);
+        
+        // Use solvedHistory or re-fetch allGrievances if stored separately
+        solvedHistory.forEach(g => {
+            if (g.status === 'Resolved') {
+                const date = new Date(g.resolved_at || g.created_at);
+                data[date.getMonth()]++;
+            }
+        });
+
+        return { 
+            labels: months, 
+            datasets: [{ label: 'Resolved Cases', data, backgroundColor: '#2563eb', borderRadius: 4 }] 
+        };
+    };
+
+    return (
     <div className="fade-in">
       <div className="content-header">
-        {/* Dynamic Name and Designation */}
-        <h2>Welcome, {fullProfile ? fullProfile.name : 'Authority'}</h2>
+        <h2>Welcome, {fullProfile ? fullProfile.name : ''}</h2>
         <p style={{color: '#64748b'}}>{fullProfile ? fullProfile.designation : 'Loading...'}</p>
+        <br></br>
       </div>
 
-      {/* STATS ROW */}
-      <div className="stats-grid">
-        <div className="stat-card">
-            <div className="stat-icon-box icon-orange"><FiAlertCircle /></div>
-            <div className="stat-info"><h3>{stats.pending}</h3><p>Pending Actions</p></div>
-        </div>
-        <div className="stat-card">
-            <div className="stat-icon-box icon-green"><FiCheckCircle /></div>
-            <div className="stat-info"><h3>{stats.solved}</h3><p>Total Solved</p></div>
-        </div>
-        <div className="stat-card">
-            <div className="stat-icon-box icon-blue"><FiClock /></div>
-            <div className="stat-info"><h3>--</h3><p>Avg Response Time</p></div>
-        </div>
+      {/* TOP STAT CARDS */}
+      <div className="stats-grid" style={{marginBottom: "20px"}}>
+        <div className="stat-card"><div className="stat-icon-box icon-orange"><FiAlertCircle /></div><div className="stat-info"><h3>{stats.pending}</h3><p>Pending</p></div></div>
+        <div className="stat-card"><div className="stat-icon-box icon-green"><FiCheckCircle /></div><div className="stat-info"><h3>{stats.solved}</h3><p>Resolved</p></div></div>
+        <div className="stat-card"><div className="stat-icon-box icon-blue"><FiActivity /></div><div className="stat-info"><h3>{stats.avgTime}</h3><p>Avg Time</p></div></div>
+        <div className="stat-card"><div className="stat-icon-box icon-purple"><FiBarChart2 /></div><div className="stat-info"><h3>{stats.rate}</h3><p>Success Rate</p></div></div>
       </div>
 
-      <h3 style={{marginBottom: "20px", marginTop: "30px", color: "#334155"}}>Pending Actions</h3>
-      
-      {/* PENDING LIST */}
-      <div className="card" style={{padding: "0"}}>
-        {pendingGrievances.length === 0 ? (
-           <div style={{padding: "40px", textAlign: "center", color: "#64748b"}}>
-               <FiCheckCircle size={40} style={{marginBottom: "10px", opacity: 0.5}}/>
-               <p>No pending work! Good job.</p>
-           </div>
-        ) : (
-           <div>
-             {pendingGrievances.map((item) => (
-                <div className="grievance-item" key={item.id} style={{borderLeft: "4px solid #f97316"}}>
-                    <div className="grievance-info">
-                        <h4>{item.category} <span style={{fontSize: "0.8rem", color: "#64748b"}}>(ID: {item.student_id})</span></h4>
-                        <p style={{fontSize: "0.9rem", color: "#475569", margin: "5px 0"}}>{item.description}</p>
-                        <span style={{fontSize: "0.8rem", color: "#f97316", fontWeight: "bold"}}>📅 {new Date(item.created_at).toLocaleDateString()}</span>
+      {/* SPLIT SECTION: PENDING (LEFT) - GRAPH (RIGHT) */}
+      <div className="stats-container-split"> 
+          
+          {/* LEFT SIDE: PENDING ACTIONS LIST */}
+          <div className="card" style={{height: "450px", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden", border: "1px solid #e2e8f0"}}>
+             
+             {/* Header */}
+             <div style={{padding: "15px 20px", background: "white", zIndex: 10, borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                <h3 style={{fontSize: "1.05rem", color: "#0f172a", margin: 0, fontWeight: "700"}}>Pending Actions</h3>
+                <span style={{fontSize: "0.8rem", background: "#ef4444", color: "white", padding: "2px 8px", borderRadius: "10px", fontWeight: "600"}}>
+                    {pendingGrievances.length} New
+                </span>
+             </div>
+             
+             {/* Scrollable List Area */}
+             <div className="pending-list-container">
+                 {pendingGrievances.length === 0 ? (
+                    <div style={{textAlign: "center", padding: "80px 20px", color: "#94a3b8"}}>
+                        <FiCheckCircle size={40} style={{marginBottom: "15px", opacity: 0.3}}/>
+                        <p style={{fontSize: "0.95rem"}}>All caught up! No pending tasks.</p>
                     </div>
-                    <button 
-                        className="login-btn" 
-                        style={{width: "auto", fontSize: "0.85rem", padding: "8px 15px"}}
-                        onClick={() => openResolveModal(item)}
-                    >
-                        Take Action
-                    </button>
+                 ) : (
+                    <div>
+                        {pendingGrievances.map(g => (
+                            <div 
+                                key={g.id} 
+                                className="actionable-item" 
+                                onClick={() => openResolveModal(g)}
+                                title="Click to Resolve"
+                            >
+                                {/* Top Row: ID and Date */}
+                                <div className="actionable-header">
+                                    <span className="ticket-id">#{g.id}</span>
+                                    <span className="ticket-date">{new Date(g.created_at).toLocaleDateString()}</span>
+                                </div>
+
+                                {/* Middle: Title (Category) + Student Badge */}
+                                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                                    <h4 className="actionable-title">
+                                        {g.category}
+                                    </h4>
+                                    <span className="student-badge">
+                                        <FiUser size={10}/> {g.student_id}
+                                    </span>
+                                </div>
+
+                                {/* Bottom: Description Preview */}
+                                <p className="actionable-desc">
+                                    {g.description}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                 )}
                 </div>
-             ))}
-           </div>
-        )}
+          </div>
+
+          {/* RIGHT SIDE: ANALYTICS GRAPH */}
+          <div className="card" style={{height: "400px", display: "flex", flexDirection: "column", position: 'relative'}}>
+             <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px"}}>
+                 <h3 style={{fontSize: "1.1rem", color: "#334155"}}>Monthly Progress</h3>
+                 
+                 {/* PRINT BUTTON */}
+                 <button 
+                    onClick={generateMyReport}
+                    style={{
+                        background: '#f1f5f9', border: 'none', padding: '6px 12px', 
+                        borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                        fontSize: '0.85rem', color: '#334155', fontWeight: '500'
+                    }}
+                 >
+                    <FiPrinter /> Print Report
+                 </button>
+             </div>
+
+             <div style={{flex: 1, position: "relative"}}>
+                <Bar 
+                    data={getGraphData()} 
+                    options={{ 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }} 
+                />
+             </div>
+          </div>
       </div>
     </div>
-  );
+    );
+  };
 
   // ==========================================
   //  TAB 2: PROFILE (DYNAMIC)
@@ -512,6 +675,58 @@ function AuthorityDashboard() {
           <h1>Smart Grievance Management System</h1>
           <p>AUTHORITY PORTAL</p>
         </div>
+        
+        <div className="header-right">
+            <div className="profile-trigger" onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}>
+                <span className="header-user-name">
+                    {fullProfile ? fullProfile.name : 'Authority'}
+                </span>
+                
+                <div style={{width: '35px', height: '35px', borderRadius: '50%', overflow: 'hidden', border: '2px solid white'}}>
+                    {fullProfile && fullProfile.profile_pic ? (
+                        <img 
+                            src={`${API_BASE.replace('/api', '')}${fullProfile.profile_pic}`} 
+                            alt="Profile" 
+                            style={{width: '100%', height: '100%', objectFit: 'cover'}}
+                            onError={(e) => {
+                                // Fallback logic if image fails
+                                e.target.style.display='none'; 
+                                e.target.parentElement.style.backgroundColor='#ccc';
+                            }} 
+                        />
+                    ) : (
+                        // Fallback Icon if no photo exists
+                        <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', background:'#e2e8f0'}}>
+                            <FiUser color="#64748b"/>
+                        </div>
+                    )}
+                </div>
+
+                <FiChevronDown size={16} color="#64748b"/>
+            </div>
+
+            {isProfileDropdownOpen && (
+                <div className="profile-dropdown-menu">
+                    <button className="dropdown-item" onClick={() => {setActiveTab('profile'); setIsProfileDropdownOpen(false);}}>
+                        <FiUser /> My Profile
+                    </button>
+                    <button className="dropdown-item" onClick={() => {setActiveTab('history'); setIsProfileDropdownOpen(false);}}>
+                        <FiClock /> History
+                    </button>
+                    <button className="dropdown-item logout-option" onClick={handleLogout}>
+                        <FiLogOut /> Logout
+                    </button>
+                </div>
+            )}
+        </div>
+
+        {/* CLICK OUTSIDE OVERLAY (To close menu when clicking elsewhere) */}
+        {isProfileDropdownOpen && (
+            <div 
+                style={{position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 199}} 
+                onClick={() => setIsProfileDropdownOpen(false)}
+            ></div>
+        )}
       </header>
 
       <div className="dashboard-container">

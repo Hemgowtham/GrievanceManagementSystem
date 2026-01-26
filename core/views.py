@@ -1,12 +1,40 @@
 from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token  # <--- ADD THIS LINE
 from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
+from django.utils import timezone  # <--- Add this at the top
+from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.utils import timezone
-from .models import CustomUser, StudentProfile, AuthorityProfile, Grievance
-from .serializers import GrievanceSerializer, StudentSerializer, AuthoritySerializer
+from .models import CustomUser, StudentProfile, AuthorityProfile, Grievance,  SiteSettings
+from .serializers import GrievanceSerializer, StudentSerializer, AuthoritySerializer, SiteSettingsSerializer
 from datetime import timedelta # Add this if missing
+from django.core.mail import send_mail
+from django.conf import settings
+import threading
+
+
+# --- HELPER CLASS: Send Email in Background (So UI doesn't lag) ---
+class EmailThread(threading.Thread):
+    def __init__(self, subject, message, recipient_list):
+        self.subject = subject
+        self.message = message
+        self.recipient_list = recipient_list
+        threading.Thread.__init__(self)
+
+    def run(self):
+        try:
+            send_mail(
+                self.subject,
+                self.message,
+                settings.EMAIL_HOST_USER,
+                self.recipient_list,
+                fail_silently=False,
+            )
+        except Exception as e:
+            print(f"Error sending email: {e}")
 
 # ==========================
 # 1. AUTHENTICATION
@@ -16,24 +44,39 @@ def login_api(request):
     raw_username = request.data.get('username')
     password = request.data.get('password')
     
-    # Attempt 1: Exact Match
+    # Authenticate User
     user = authenticate(username=raw_username, password=password)
-    
-    # Attempt 2: Uppercase Match
     if user is None and raw_username:
         user = authenticate(username=raw_username.upper(), password=password)
     
     if user:
+        # =================================================
+        # MAINTENANCE MODE CHECK
+        # =================================================
+        settings = SiteSettings.load()
+        if settings.maintenance_mode:
+            # If Maintenance is ON, ONLY Superusers (Admins) can enter
+            if not user.is_superuser:
+                return Response({
+                    'status': 'error', 
+                    'message': 'System is under maintenance. Please try again later.'
+                }, status=503) # 503 = Service Unavailable
+        # =================================================
+
+        # Determine Role
         role = user.user_type
         if user.is_superuser:
             role = 'admin'
         if not role:
             role = 'student' 
 
+        # Generate Token
+        token, created = Token.objects.get_or_create(user=user)
+
         return Response({
             'status': 'success',
             'user_type': role,
-            'token': f"token_{user.id}_{user.username}",
+            'token': token.key,
             'username': user.username,
             'name': user.first_name
         })
@@ -43,8 +86,14 @@ def login_api(request):
 # ==========================
 # 2. ADMIN ACTIONS (Register)
 # ==========================
+
 @api_view(['POST'])
 def register_student(request):
+    # --- CHECK SETTINGS ---
+    if not SiteSettings.load().allow_registration:
+        return Response({'status': 'error', 'message': 'Registration is currently disabled.'}, status=403)
+    # ----------------------
+
     data = request.data
     try:
         # Force ID to Uppercase for consistency
@@ -61,9 +110,15 @@ def register_student(request):
     except Exception as e:
         return Response({'status': 'error', 'message': str(e)}, status=400)
 
+
 @api_view(['POST'])
-@parser_classes([MultiPartParser, FormParser]) # Added to support photo upload during register if needed
+@parser_classes([MultiPartParser, FormParser]) 
 def register_authority(request):
+    # --- CHECK SETTINGS ---
+    if not SiteSettings.load().allow_registration:
+        return Response({'status': 'error', 'message': 'Registration is currently disabled.'}, status=403)
+    # ----------------------
+
     data = request.data
     try:
         user = CustomUser.objects.create_user(
@@ -159,20 +214,60 @@ def grievance_api(request):
             
             # If resolving (Authority)
             if 'status' in request.data:
-                grievance.status = request.data.get('status')
-                grievance.authority_reply = request.data.get('reply')
+                new_status = request.data.get('status')
+                reply_text = request.data.get('reply', 'No remarks provided.')
                 
-                # --- NEW: Handle Resolution Image ---
+                grievance.status = new_status
+                grievance.authority_reply = reply_text
+                
+                # Handle Resolution Image
                 if 'resolved_image' in request.FILES:
                     grievance.resolved_image = request.FILES['resolved_image']
                 
-                grievance.resolved_at = timezone.now()
-            
+                # Set Resolved Time
+                if new_status == 'Resolved':
+                    grievance.resolved_at = timezone.now()
+                
+                grievance.save()
+
+               # ===============================================
+                #  CONDITIONAL EMAIL NOTIFICATION
+                # ===============================================
+                # 1. Load the global settings
+                site_config = SiteSettings.load()
+
+                # 2. Check if Email Alerts are ON
+                if site_config.email_alerts:
+                    if grievance.student and grievance.student.user.email:
+                        subject = f"Grievance Update: Ticket #{grievance.id} is {new_status}"
+                        
+                        message = f"""
+Dear Student ({grievance.student.student_id}),
+
+Your grievance regarding '{grievance.category}' has been updated.
+
+------------------------------------------------
+New Status: {new_status.upper()}
+Authority Remarks: {reply_text}
+------------------------------------------------
+
+Please login to the dashboard to view full details.
+
+Regards,
+Smart Grievance Management System
+                        """
+                        
+                        # Send Email in Background
+                        EmailThread(subject, message, [grievance.student.user.email]).start()
+                        print("Email notification sent.")
+                else:
+                    print("Email notifications are disabled in settings. Skipping.")
+
             # If giving feedback (Student)
             if 'feedback_stars' in request.data:
                 grievance.feedback_stars = request.data.get('feedback_stars')
+                grievance.save()
                 
-            grievance.save()
             return Response({'status': 'success'})
         except Exception as e:
             return Response({'status': 'error', 'message': str(e)}, status=400)
@@ -274,7 +369,7 @@ def manage_students(request):
 
 
 @api_view(['GET', 'DELETE', 'PUT'])
-@parser_classes([MultiPartParser, FormParser]) # <--- CRITICAL FIX FOR PHOTOS
+@parser_classes([MultiPartParser, FormParser, JSONParser]) # <--- CRITICAL FIX FOR PHOTOS
 def manage_authorities(request):
     # GET: List all authorities
     if request.method == 'GET':
@@ -329,3 +424,53 @@ def manage_authorities(request):
             return Response({'status': 'success', 'message': 'Authority Deleted'})
         except AuthorityProfile.DoesNotExist:
             return Response({'status': 'error', 'message': 'Authority not found'}, status=404)
+        
+
+@api_view(['GET', 'POST'])
+def site_settings_api(request):
+    settings = SiteSettings.load()
+
+    if request.method == 'GET':
+        serializer = SiteSettingsSerializer(settings)
+        data = serializer.data
+        
+        # Get Admin User
+        User = get_user_model()
+        admin_user = User.objects.filter(is_superuser=True).first()
+        
+        # --- CHECK PASSWORD CHANGE DATE ---
+        if admin_user and admin_user.last_password_change:
+            data['admin_pass_changed'] = naturaltime(admin_user.last_password_change)
+        else:
+            data['admin_pass_changed'] = "Not recorded yet"
+        # ----------------------------------
+
+        return Response(data)
+
+    elif request.method == 'POST':
+        # ... (POST logic remains the same) ...
+        serializer = SiteSettingsSerializer(settings, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': 'success', 'data': serializer.data})
+        return Response(serializer.errors, status=400)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_change_password(request):
+    user = request.user
+    old_pass = request.data.get('old_password')
+    new_pass = request.data.get('new_password')
+
+    if not user.check_password(old_pass):
+        return Response({'message': 'Incorrect old password'}, status=400)
+
+    user.set_password(new_pass)
+    
+    # --- UPDATE TIMESTAMP ---
+    user.last_password_change = timezone.now()
+    # ------------------------
+    
+    user.save()
+    return Response({'status': 'success'})

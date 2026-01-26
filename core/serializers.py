@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import CustomUser, StudentProfile, AuthorityProfile, Grievance
+from .models import SiteSettings
 
 # 1. USER SERIALIZER
 class UserSerializer(serializers.ModelSerializer):
@@ -34,4 +35,9 @@ class GrievanceSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Grievance
+        fields = '__all__'
+
+class SiteSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteSettings
         fields = '__all__'

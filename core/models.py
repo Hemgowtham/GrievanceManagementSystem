@@ -11,6 +11,8 @@ class CustomUser(AbstractUser):
     user_type = models.CharField(max_length=30, choices=USER_TYPE_CHOICES)
     profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
 
+    last_password_change = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         return f"{self.username} ({self.user_type})"
 
@@ -61,3 +63,21 @@ class Grievance(models.Model):
 
     def __str__(self):
         return f"{self.id} - {self.category}"
+    
+
+class SiteSettings(models.Model):
+    # This ensures we only have one settings row
+    allow_registration = models.BooleanField(default=True)
+    maintenance_mode = models.BooleanField(default=False)
+    auto_escalation = models.BooleanField(default=False)
+    email_alerts = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        # Force ID to be 1 (Singleton Pattern)
+        self.pk = 1
+        super(SiteSettings, self).save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj

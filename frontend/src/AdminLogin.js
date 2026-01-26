@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { FiUser, FiLock, FiEye, FiEyeOff } from 'react-icons/fi'; // Used FiUser for Admin
+import { FiUser, FiLock, FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
 import './App.css';
 import logo from './logo.png'; 
 
@@ -24,19 +24,43 @@ function AdminLogin() {
         password: password
       });
 
-      if (response.data.message === 'Login Successful') {
-        setStatus({ type: 'success', text: 'Admin Verified. Accessing Portal...' });
-        
-        // --- FIX: SAVE THE CORRECT TOKEN ---
-        localStorage.setItem('admin_token', 'active');
-        // -----------------------------------
+      // 1. Check if the backend says "success"
+      if (response.data.status === 'success') {
+          
+        // 2. Security Check: Is this user actually an Admin?
+        if (response.data.user_type === 'admin') {
+            setStatus({ type: 'success', text: 'Credentials Verified. Redirecting...' });
+            
+            // 3. Save the REAL Token and User Info
+            localStorage.setItem('admin_token', response.data.token);
+            localStorage.setItem('admin_user', JSON.stringify({
+                username: response.data.username,
+                name: response.data.name || "Administrator"
+            }));
 
-        setTimeout(() => {
-            navigate('/admin-dashboard');
-        }, 800);
+            setTimeout(() => {
+                navigate('/admin-dashboard');
+            }, 800);
+        } else {
+            // User exists, but is NOT an admin (e.g., a Student trying to login here)
+            setStatus({ type: 'error', text: 'Access Denied: You do not have Admin privileges.' });
+            setIsLoading(false);
+        }
+
+      } else {
+        // Fallback for other status messages
+        setStatus({ type: 'error', text: 'Invalid Admin ID or Password' });
+        setIsLoading(false);
       }
+
     } catch (error) {
-      setStatus({ type: 'error', text: 'Access Denied: Invalid Admin Credentials' });
+      console.error(error);
+      // Handle 401 (Unauthorized) or Network Errors
+      if (error.response && error.response.status === 401) {
+          setStatus({ type: 'error', text: 'Invalid Admin ID or Password' });
+      } else {
+          setStatus({ type: 'error', text: 'Server unreachable. Please try again.' });
+      }
       setIsLoading(false);
     }
   };
@@ -98,7 +122,12 @@ function AdminLogin() {
             </button>
           </form>
 
-          {status && <div className={`alert-box ${status.type === 'error' ? 'alert-error' : 'alert-success'}`}>{status.text}</div>}
+          {status && (
+             <div className={`alert-box ${status.type === 'error' ? 'alert-error' : 'alert-success'}`} style={{marginTop: '15px'}}>
+                 {status.type === 'error' && <FiAlertCircle style={{marginRight:'8px'}} />}
+                 {status.text}
+             </div>
+          )}
         </div>
       </div>
     </>

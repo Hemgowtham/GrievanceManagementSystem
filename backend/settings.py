@@ -32,9 +32,23 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
+    'rest_framework_simplejwt',
     'core',
 ]
+
+# ==========================================
+# REST FRAMEWORK CONFIGURATION (Add this!)
+# ==========================================
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ]
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -134,3 +148,14 @@ CSRF_TRUSTED_ORIGINS = [
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# ==========================================
+# EMAIL CONFIGURATION (Add to settings.py)
+# ==========================================
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'rapidconcepts07@gmail.com'  # <--- REPLACE THIS
+EMAIL_HOST_PASSWORD = 'zgip bjru xeez vrnc'  # <--- REPLACE WITH YOUR APP PASSWORD
+DEFAULT_FROM_EMAIL = 'Grievance Admin <rapidconcepts07@gmail.com>'

@@ -3,10 +3,13 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from core import views
+from core.views import site_settings_api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
+
+    path('api/admin/change-password/', views.admin_change_password),
+
     # Auth & Reg
     path('api/login/', views.login_api),
     path('api/register-student/', views.register_student),
@@ -17,5 +20,6 @@ urlpatterns = [
     path('api/stats/', views.dashboard_stats),
     path('api/students/', views.manage_students),
     path('api/authorities/', views.manage_authorities),
+    path('api/settings/', site_settings_api),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

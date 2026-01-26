@@ -23,6 +23,8 @@ function StudentDashboard() {
   const [userInfo, setUserInfo] = useState(null); 
   const [fullProfile, setFullProfile] = useState(null); 
   const [realGrievances, setRealGrievances] = useState([]); 
+
+  const [isLoading, setIsLoading] = useState(true);
   
   const [activeTab, setActiveTab] = useState('home'); 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
@@ -132,11 +134,14 @@ function StudentDashboard() {
   };
 
   const fetchUserGrievances = async (studentId) => {
+    setIsLoading(true); // 1. Start Loading
     try {
         const response = await axios.get(`${API_BASE}/grievances/?role=student&user_id=${studentId}`);
         setRealGrievances(response.data);
-    } catch (error) {
-        console.error("Error fetching grievances", error);
+    } catch (error) { 
+        console.error("Error fetching grievances", error); 
+    } finally {
+        setIsLoading(false); // 2. Stop Loading (whether success or error)
     }
   };
 
@@ -597,7 +602,7 @@ function StudentDashboard() {
   const renderHome = () => (
     <div className="fade-in">
       <div className="content-header">
-        <h2>Welcome, {userInfo ? userInfo.username : 'Student'}!</h2>
+        <h2>Welcome, {userInfo ? userInfo.username : 'Student'}</h2>
         <br></br>
       </div>
 
@@ -741,51 +746,63 @@ function StudentDashboard() {
 
     return (
         <div className="fade-in">
-        <div className="content-header"><h2>My Grievance History</h2></div>
-        
-        {/* --- FILTER BAR WITH DATE --- */}
-        <div className="filter-bar" style={{flexWrap: 'wrap', gap: '10px'}}>
-            <select className="filter-select" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}><option value="All">All Categories</option><option value="Hostel">Hostel</option><option value="Mess">Mess</option><option value="Academic">Academic</option><option value="Hospital">Hospital</option><option value="Sports">Sports</option><option value="Ragging">Ragging</option></select>
-            <select className="filter-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}><option value="All">All Statuses</option><option value="Pending">Pending</option><option value="Resolved">Resolved</option></select>
-            {/* NEW DATE INPUT */}
-            <input type="date" className="form-input" style={{width: 'auto', padding: '8px'}} value={filterDate} onChange={(e) => setFilterDate(e.target.value)}/>
-        </div>
+            <div className="content-header"><h2>My Grievance History</h2></div>
+            
+            {/* Filter Bar */}
+            <div className="filter-bar" style={{flexWrap: 'wrap', gap: '10px'}}>
+               {/* ... (Keep your existing filter inputs here) ... */}
+               <select className="filter-select" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}><option value="All">All Categories</option><option value="Hostel">Hostel</option><option value="Mess">Mess</option><option value="Academic">Academic</option><option value="Hospital">Hospital</option><option value="Sports">Sports</option><option value="Ragging">Ragging</option></select>
+               <select className="filter-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}><option value="All">All Statuses</option><option value="Pending">Pending</option><option value="Resolved">Resolved</option></select>
+               <input type="date" className="form-input" style={{width: 'auto', padding: '8px'}} value={filterDate} onChange={(e) => setFilterDate(e.target.value)}/>
+            </div>
 
-        <div className="card" style={{ padding: "0" }}> 
-            {filteredList.length === 0 ? (<div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}><FiFileText size={40} style={{ marginBottom: "10px", opacity: 0.5 }} /><p>No grievances match your filters.</p></div>) : (
-                <div>
-                    {filteredList.map((item) => {
-                        const timeDiff = (new Date() - new Date(item.created_at)) / 60000; // mins
-                        // --- UPDATED DELETE CONDITION: < 5 mins AND Status must be Pending ---
-                        const isDeletable = timeDiff < 5 && item.status === 'Pending';
-
-                        return (
-                        <div className="grievance-item" key={item.id}>
-                            <div className="grievance-info">
-                                <h4>{item.category}</h4>
-                                <div style={{display: "flex", alignItems: "center", flexWrap: "wrap", gap: "5px"}}>
-                                    <span>📅 {new Date(item.created_at).toLocaleDateString()}</span>
-                                    <span className={`status-badge ${item.status === 'Resolved' ? 'status-resolved' : 'status-pending'}`}>{item.status}</span>
+            <div className="card" style={{ padding: "0" }}> 
+                {/* --- LOADING LOGIC START --- */}
+                {isLoading ? (
+                    <div style={{textAlign: "center", padding: "50px 20px"}}>
+                        <div className="spinner"></div>
+                        <p style={{marginTop: "15px", color: "#64748b", fontWeight: "500"}}>Loading records...</p>
+                    </div>
+                ) : filteredList.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
+                        <FiFileText size={40} style={{ marginBottom: "10px", opacity: 0.5 }} />
+                        <p>No grievances match your filters.</p>
+                    </div>
+                ) : (
+                    <div>
+                        {filteredList.map((item) => {
+                             // ... (Keep your existing list mapping code exactly as is) ...
+                             const timeDiff = (new Date() - new Date(item.created_at)) / 60000;
+                             const isDeletable = timeDiff < 5 && item.status === 'Pending';
+                             return (
+                                <div className="grievance-item" key={item.id}>
+                                    {/* ... existing item content ... */}
+                                    <div className="grievance-info">
+                                        <h4>{item.category}</h4>
+                                        <div style={{display: "flex", alignItems: "center", flexWrap: "wrap", gap: "5px"}}>
+                                            <span>📅 {new Date(item.created_at).toLocaleDateString()}</span>
+                                            <span className={`status-badge ${item.status === 'Resolved' ? 'status-resolved' : 'status-pending'}`}>{item.status}</span>
+                                        </div>
+                                    </div>
+                                    <div style={{display: "flex", gap: "5px"}}>
+                                        {(item.status === 'Resolved' || item.status === 'Escalated') && (
+                                            <button className="action-btn" onClick={() => generatePDF(item)} style={{backgroundColor: "#e0f2fe", color: "#0284c7", border: "1px solid #bae6fd"}} title="Print Report"><FiPrinter /></button>
+                                        )}
+                                        <button className="action-btn" onClick={() => openDetailModal(item)}><FiEye style={{marginRight: "5px"}}/> View</button>
+                                        {isDeletable && (
+                                            <button className="action-btn" onClick={() => deleteGrievance(item.id, item.created_at)} style={{backgroundColor: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca"}} title="Delete"><FiTrash2 /></button>
+                                        )}
+                                        {item.status === 'Resolved' && !item.feedback_stars && (
+                                            <button className="action-btn btn-feedback" onClick={() => openFeedbackModal(item)}><FiMessageSquare style={{marginRight: "5px"}}/> Feedback</button>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                            <div style={{display: "flex", gap: "5px"}}>
-                                {(item.status === 'Resolved' || item.status === 'Escalated') && (
-                                    <button className="action-btn" onClick={() => generatePDF(item)} style={{backgroundColor: "#e0f2fe", color: "#0284c7", border: "1px solid #bae6fd"}} title="Print Report"><FiPrinter /></button>
-                                )}
-                                <button className="action-btn" onClick={() => openDetailModal(item)}><FiEye style={{marginRight: "5px"}}/> View</button>
-                                {isDeletable && (
-                                    <button className="action-btn" onClick={() => deleteGrievance(item.id, item.created_at)} style={{backgroundColor: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca"}} title="Delete"><FiTrash2 /></button>
-                                )}
-                                {item.status === 'Resolved' && !item.feedback_stars && (
-                                    <button className="action-btn btn-feedback" onClick={() => openFeedbackModal(item)}><FiMessageSquare style={{marginRight: "5px"}}/> Feedback</button>
-                                )}
-                            </div>
-                        </div>
-                        );
-                    })}
-                </div>
-            )}
-        </div>
+                             );
+                        })}
+                    </div>
+                )}
+                {/* --- LOADING LOGIC END --- */}
+            </div>
         </div>
     );
   };

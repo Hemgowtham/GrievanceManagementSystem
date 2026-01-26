@@ -1000,6 +1000,207 @@ body { background-color: var(--bg-main); height: 100vh; display: flex; flex-dire
 }
 
 
+/* --- PROFESSIONAL PENDING LIST (ZEBRA STRIPED) --- */
+.pending-list-container {
+  overflow-y: auto;
+  flex: 1;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+
+.actionable-item {
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background-color: white; /* Default Even Rows */
+}
+
+/* ODD ROWS BACKGROUND (Zebra Striping) */
+.actionable-item:nth-child(odd) {
+  background-color: #f8fafc; 
+}
+
+/* HOVER EFFECT */
+.actionable-item:hover {
+  background-color: #eff6ff; /* Very light blue highlight */
+  padding-left: 24px; /* Slide effect */
+}
+
+/* TYPOGRAPHY & LAYOUT */
+.actionable-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.ticket-id {
+  font-family: 'Courier New', monospace; /* Monospace for IDs looks techy */
+  font-weight: 700;
+  color: #64748b;
+  font-size: 0.85rem;
+  letter-spacing: -0.5px;
+}
+
+.ticket-date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.actionable-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b; /* Dark slate for high contrast */
+  margin: 0;
+  line-height: 1.4;
+}
+
+.actionable-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  white-space: nowrap; 
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.student-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  background: white;
+  border: 1px solid #cbd5e1;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 10px;
+}
+
+
+/* =========================================================
+   ADMIN DASHBOARD SETTINGS (Unique Namespace: ads-)
+   ========================================================= */
+
+/* Layout Grid */
+.ads-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+/* Card Style */
+.ads-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  transition: transform 0.2s ease;
+}
+
+.ads-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+}
+
+.ads-card h4 {
+  color: #1e293b;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+}
+
+/* Row Item */
+.ads-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.ads-row:last-child {
+  margin-bottom: 0;
+}
+
+.ads-info h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.ads-info p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* --- UNIQUE TOGGLE SWITCH (ads-toggle) --- */
+.ads-toggle {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.ads-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The Track */
+.ads-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #cbd5e1; /* Inactive Gray */
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  border-radius: 34px;
+}
+
+/* The Knob */
+.ads-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Checked State */
+.ads-toggle input:checked + .ads-slider {
+  background-color: #2563eb; /* Brand Blue */
+}
+
+.ads-toggle input:checked + .ads-slider:before {
+  transform: translateX(22px);
+}
+
+/* Focus State */
+.ads-toggle input:focus + .ads-slider {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}ssssss
+
 /* =========================================
    MOBILE OPTIMIZATIONS (SCROLLABLE LIST)
    ========================================= */
@@ -1116,6 +1317,75 @@ body { background-color: var(--bg-main); height: 100vh; display: flex; flex-dire
     background-color: #f8fafc;
 }
 
+/* --- LOADING SPINNER --- */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid #2563eb; /* Blue color */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+/* --- RESPONSIVE STATISTICS LAYOUT --- */
+
+/* 1. Main Stats Split (Graph vs Authority List) */
+.stats-container-split {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr; /* Desktop: Side by Side */
+  gap: 20px;
+  align-items: start;
+}
+
+/* 2. Authority Modal Inner Grid (Graph vs Text Stats) */
+.auth-modal-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr; /* Desktop: Side by Side */
+  gap: 30px;
+  margin-bottom: 25px;
+}
+
+/* 3. Modal Size Override */
+.responsive-modal {
+  width: 75vw;
+  max-width: 950px;
+}
+
+
+
+/* --- MOBILE BREAKPOINT (Tablets & Phones) --- */
+@media (max-width: 900px) {
+  /* Stack the main dashboard sections */
+  .stats-container-split {
+    grid-template-columns: 1fr; 
+  }
+
+  /* Stack the modal content */
+  .auth-modal-grid {
+    grid-template-columns: 1fr; 
+    gap: 20px;
+  }
+
+  /* Make modal wider on mobile */
+  .responsive-modal {
+    width: 95vw !important;
+    padding: 15px;
+    max-height: 90vh;
+    overflow-y: auto; /* Allow scrolling inside modal if tall */
+  }
+
+  /* Adjust Chart Height on Mobile */
+  .mobile-chart-height {
+    height: 300px !important;
+  }
+}
 
 /* =========================================
    MOBILE RESPONSIVENESS (Max-Width: 768px)
