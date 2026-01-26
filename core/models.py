@@ -13,6 +13,9 @@ class CustomUser(AbstractUser):
 
     last_password_change = models.DateTimeField(null=True, blank=True)
 
+    otp_code = models.CharField(max_length=6, null=True, blank=True)
+    otp_created_at = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         return f"{self.username} ({self.user_type})"
 

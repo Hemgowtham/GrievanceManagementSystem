@@ -1,6 +1,6 @@
 from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token  # <--- ADD THIS LINE
 from django.contrib.auth import authenticate
@@ -14,6 +14,7 @@ from datetime import timedelta # Add this if missing
 from django.core.mail import send_mail
 from django.conf import settings
 import threading
+import random
 
 
 # --- HELPER CLASS: Send Email in Background (So UI doesn't lag) ---
@@ -474,3 +475,81 @@ def admin_change_password(request):
     
     user.save()
     return Response({'status': 'success'})
+
+
+
+# ==========================================
+# FORGOT PASSWORD FEATURE
+# ==========================================
+
+@api_view(['POST'])
+@permission_classes([AllowAny]) # Anyone can access this
+def send_otp_api(request):
+    user_id = request.data.get('id')
+    
+    # 1. Find User by ID (Student ID or Employee ID)
+    try:
+        # Try finding exact match or uppercase match
+        user = CustomUser.objects.get(username__iexact=user_id)
+    except CustomUser.DoesNotExist:
+        return Response({'status': 'error', 'message': 'User ID not found!'}, status=404)
+
+    if not user.email:
+        return Response({'status': 'error', 'message': 'No email registered for this ID. Contact Admin.'}, status=400)
+
+    # 2. Generate 6-Digit OTP
+    otp = str(random.randint(100000, 999999))
+    
+    # 3. Save OTP to DB
+    user.otp_code = otp
+    user.otp_created_at = timezone.now()
+    user.save()
+
+    # 4. Send Email
+    subject = "Password Reset OTP - Grievance System"
+    message = f"""
+Hello {user.first_name},
+
+You requested to reset your password.
+Your OTP Code is: {otp}
+
+This code is valid for 10 minutes.
+
+If you did not request this, please ignore this email.
+    """
+    
+    try:
+        send_mail(subject, message, settings.EMAIL_HOST_USER, [user.email])
+        return Response({'status': 'success', 'message': f'OTP sent to {user.email}'})
+    except Exception as e:
+        return Response({'status': 'error', 'message': 'Failed to send email. Check server logs.'}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password_with_otp(request):
+    user_id = request.data.get('id')
+    otp_input = request.data.get('otp')
+    new_password = request.data.get('new_password')
+
+    try:
+        user = CustomUser.objects.get(username__iexact=user_id)
+    except CustomUser.DoesNotExist:
+        return Response({'status': 'error', 'message': 'User ID not found!'}, status=404)
+
+    # 1. Check if OTP matches
+    if user.otp_code != otp_input:
+        return Response({'status': 'error', 'message': 'Invalid OTP code.'}, status=400)
+
+    # 2. Check Expiry (10 Minutes)
+    expiry_time = user.otp_created_at + timedelta(minutes=10)
+    if timezone.now() > expiry_time:
+        return Response({'status': 'error', 'message': 'OTP has expired. Please request a new one.'}, status=400)
+
+    # 3. Reset Password
+    user.set_password(new_password)
+    user.otp_code = None  # Clear OTP after use
+    user.last_password_change = timezone.now() # Update tracking field
+    user.save()
+
+    return Response({'status': 'success', 'message': 'Password changed successfully! You can login now.'})

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from core import views
 from core.views import site_settings_api
+from core.views import send_otp_api, reset_password_with_otp
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -21,5 +22,7 @@ urlpatterns = [
     path('api/students/', views.manage_students),
     path('api/authorities/', views.manage_authorities),
     path('api/settings/', site_settings_api),
+    path('api/forgot-password/send-otp/', send_otp_api),
+    path('api/forgot-password/reset/', reset_password_with_otp),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
