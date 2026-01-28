@@ -14,7 +14,7 @@ import logo from './logo.png';
 import userAvatar from './logo.png'; 
 
 // API BASE URL
-const API_BASE = 'https://grievancemanagementsystem.onrender.com/api/';
+const API_BASE = 'https://grievancemanagementsystemrguktnuzvid.onrender.com';
 
 function StudentDashboard() {
   // ==========================================

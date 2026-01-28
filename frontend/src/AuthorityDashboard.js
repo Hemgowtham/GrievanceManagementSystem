@@ -16,7 +16,7 @@ import {
 import { Bar } from 'react-chartjs-2';
 
 // API CONFIG
-const API_BASE = 'https://grievancemanagementsystem.onrender.com/';
+const API_BASE = 'https://grievancemanagementsystemrguktnuzvid.onrender.com';
 
 function AuthorityDashboard() {
   // ==========================================

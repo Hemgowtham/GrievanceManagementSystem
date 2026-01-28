@@ -19,7 +19,7 @@ function AdminLogin() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://grievancemanagementsystem.onrender.com/api/login/', {
+      const response = await axios.post('https://grievancemanagementsystemrguktnuzvid.onrender.com/api/login/', {
         username: username,
         password: password
       });
