@@ -5,7 +5,7 @@ import { FiLock, FiEye, FiEyeOff, FiUser, FiAlertCircle } from 'react-icons/fi';
 import './App.css'; 
 import logo from './logo.png'; 
 
-const API_BASE = "https://grievancemanagementsystemrguktnuzvid.onrender.com";
+const API_BASE = "https://grievancemanagementsystemrguktnuzvid.onrender.com/api";
 
 function Login() {
   const navigate = useNavigate();

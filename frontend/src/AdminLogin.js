@@ -13,13 +13,15 @@ function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  const API_BASE = "https://grievancemanagementsystemrguktnuzvid.onrender.com/api";
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setStatus(null);
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://grievancemanagementsystemrguktnuzvid.onrender.com/api/login/', {
+      const response = await axios.post(`${API_BASE}/login/`, {
         username: username,
         password: password
       });
