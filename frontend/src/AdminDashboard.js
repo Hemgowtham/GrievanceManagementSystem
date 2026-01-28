@@ -33,7 +33,7 @@ ChartJS.register(
 );
 
 // API CONFIG
-const API_BASE = 'http://127.0.0.1:8000/api';
+const API_BASE = 'https://grievancemanagementsystem.onrender.com/api/';
 
 function AdminDashboard() {
   // ... (State Management - largely same, just updated studentForm logic)
