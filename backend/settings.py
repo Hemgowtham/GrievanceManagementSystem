@@ -142,10 +142,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.CustomUser'
 
 # Allow React to talk to Django
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "https://grievancemanagementsystem-RguktNuzvid.onrender.com", # Your actual frontend URL
+]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
+    "https://grievancemanagementsystem-RguktNuzvid.onrender.com",
 ]
 
 MEDIA_URL = '/media/'
