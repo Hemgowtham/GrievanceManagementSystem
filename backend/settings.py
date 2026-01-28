@@ -144,11 +144,13 @@ AUTH_USER_MODEL = 'core.CustomUser'
 # Allow React to talk to Django
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "https://grievancemanagementsystem-RguktNuzvid.onrender.com", # Your actual frontend URL
+   "https://grievancemanagementsystem-rguktnuzvid.onrender.com", # <--- Your Frontend URL from the error
+    "http://localhost:3000", # Keep this for local testing
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://grievancemanagementsystem-RguktNuzvid.onrender.com",
+    "https://grievancemanagementsystem-rguktnuzvid.onrender.com", # <--- Your Frontend URL from the error
+    "http://localhost:3000", # Keep this for local testing
 ]
 
 MEDIA_URL = '/media/'
